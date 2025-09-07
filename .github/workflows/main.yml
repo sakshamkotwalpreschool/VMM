@@ -1,4 +1,4 @@
-name: Ubuntu GUI With Internet (VNC + ngrok)
+name: Ubuntu GUI With ngrok VNC Access
 
 on:
   workflow_dispatch:
@@ -11,11 +11,14 @@ jobs:
       - name: Install XFCE Desktop, VNC, and ngrok
         run: |
           sudo apt-get update
-          sudo apt-get install -y xfce4 xfce4-goodies x11vnc xvfb wget
+          sudo apt-get install -y xfce4 xfce4-goodies x11vnc xvfb wget unzip
           wget -q -O ngrok.zip https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip
           unzip ngrok.zip
           sudo mv ngrok /usr/local/bin
           sudo chmod +x /usr/local/bin/ngrok
+
+      - name: Auth ngrok
+        run: ngrok config add-authtoken ${{ secrets.NGROK_AUTHTOKEN }}
 
       - name: Set VNC Password
         run: |
@@ -38,9 +41,8 @@ jobs:
         run: |
           nohup ngrok tcp 5900 --log=stdout > ngrok.log &
           sleep 7
-          cat ngrok.log | grep -m 1 "url=" | awk -F"url=" '{print $2}'
 
       - name: Show ngrok URL in logs
         run: |
-          echo "Copy this ngrok TCP URL (from previous log step) into your VNC client."
-          echo "VNC password: password123"
+          echo "Copy the ngrok TCP URL below into your VNC client (host:port); password: password123"
+          cat ngrok.log | grep -i "url="
