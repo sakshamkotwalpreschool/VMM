@@ -1,4 +1,4 @@
-name: Ubuntu GUI With Tailscale VNC
+name: Ubuntu GUI via Tailscale VNC
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install XFCE Desktop, VNC server, and Tailscale
+      - name: Install XFCE Desktop, x11vnc, Xvfb, and Tailscale
         run: |
           sudo apt-get update
           sudo apt-get install -y xfce4 xfce4-goodies x11vnc xvfb wget curl unzip
@@ -19,10 +19,10 @@ jobs:
           mkdir -p ~/.vnc
           x11vnc -storepasswd 'password123' ~/.vnc/passwd
 
-      - name: Authenticate Tailscale
+      - name: Authenticate Tailscale (using secret as authkey)
         run: |
-          tailscale up --authkey=${{ secrets.NGROK_AUTHTOKEN }} --hostname=github-action-runner --accept-routes --advertise-tags=tag:github-action || tailscale up --force-reauth
-          tailscale status
+          sudo tailscale up --authkey=${{ secrets.NGROK_AUTHTOKEN }} --hostname=github-action-runner
+          sudo tailscale status
 
       - name: Start Virtual Desktop (Xvfb) and XFCE
         run: |
@@ -38,6 +38,6 @@ jobs:
 
       - name: Show Tailscale IP address for VNC
         run: |
-          echo "Tailscale private IPv4 for this runner:"
-          tailscale ip -4
-          echo "Connect VNC to this IP:5900 (password: password123) from a device in your Tailscale network."
+          echo "Tailscale private IPv4 address for this runner (for VNC connection):"
+          sudo tailscale ip -4
+          echo "Use VNC to connect to that IP:5900. Password: password123 (your device must be in your Tailscale network)"
