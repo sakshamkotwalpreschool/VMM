@@ -19,7 +19,7 @@ jobs:
           x11vnc -storepasswd '${{ secrets.VNC_PASS }}' ~/.vnc/passwd
       - name: Authenticate Tailscale
         run: |
-          sudo tailscale up --authkey=${{ secrets.TS_AUTHKEY }} --hostname=github-action-runner
+          sudo tailscale up --authkey=${{ secrets.NGROK_AUTHTOKEN }} --hostname=github-action-runner
           sudo tailscale status
       - name: Start Virtual Desktop (Xvfb) and XFCE
         run: |
