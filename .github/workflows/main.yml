@@ -1,0 +1,46 @@
+name: Ubuntu GUI With Internet (VNC + ngrok)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ubuntu-gui:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install XFCE Desktop, VNC, and ngrok
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xfce4 xfce4-goodies x11vnc xvfb wget
+          wget -q -O ngrok.zip https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip
+          unzip ngrok.zip
+          sudo mv ngrok /usr/local/bin
+          sudo chmod +x /usr/local/bin/ngrok
+
+      - name: Set VNC Password
+        run: |
+          mkdir -p ~/.vnc
+          x11vnc -storepasswd 'password123' ~/.vnc/passwd
+
+      - name: Start Virtual Desktop (Xvfb) and XFCE
+        run: |
+          nohup Xvfb :1 -screen 0 1024x768x16 &
+          export DISPLAY=:1
+          nohup startxfce4 &
+          sleep 15
+
+      - name: Start x11vnc Server
+        run: |
+          export DISPLAY=:1
+          nohup x11vnc -display :1 -rfbauth ~/.vnc/passwd -forever -shared -bg -nopw &
+
+      - name: Start ngrok Tunnel for VNC
+        run: |
+          nohup ngrok tcp 5900 --log=stdout > ngrok.log &
+          sleep 7
+          cat ngrok.log | grep -m 1 "url=" | awk -F"url=" '{print $2}'
+
+      - name: Show ngrok URL in logs
+        run: |
+          echo "Copy this ngrok TCP URL (from previous log step) into your VNC client."
+          echo "VNC password: password123"
